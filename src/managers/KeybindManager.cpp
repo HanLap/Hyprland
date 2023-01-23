@@ -1428,10 +1428,25 @@ void CKeybindManager::moveWorkspaceToMonitor(std::string args) {
 
 void CKeybindManager::toggleSpecialWorkspace(std::string args) {
 
+    std::string name = args.substr(0, args.find_first_of(' '));
+    int state = -1;
+    
+    if (args.contains(' ')) {
+        std::string stateStr   = args.substr(args.find_first_of(' ') + 1);
+
+        if (!isNumber(stateStr)) {
+            Debug::log(ERR, "state is not a number");
+            return;
+        }
+        state = std::stoi(stateStr);
+    } 
+
+    Debug::log(LOG, "state: %d", state);
+
     static auto* const PFOLLOWMOUSE = &g_pConfigManager->getConfigValuePtr("input:follow_mouse")->intValue;
 
     std::string        workspaceName = "";
-    int                workspaceID   = getWorkspaceIDFromString("special:" + args, workspaceName);
+    int                workspaceID   = getWorkspaceIDFromString("special:" + name, workspaceName);
 
     if (workspaceID == INT_MAX || !g_pCompositor->isWorkspaceSpecial(workspaceID)) {
         Debug::log(ERR, "Invalid workspace passed to special");
@@ -1459,7 +1474,7 @@ void CKeybindManager::toggleSpecialWorkspace(std::string args) {
     else
         Debug::log(LOG, "Toggling special workspace %d to open", workspaceID);
 
-    if (requestedWorkspaceIsAlreadyOpen && specialOpenOnMonitor == workspaceID) {
+    if (requestedWorkspaceIsAlreadyOpen && specialOpenOnMonitor == workspaceID && (state == 0 || state == -1)) {
         // already open on this monitor
         PMONITOR->setSpecialWorkspace(nullptr);
     } else if (requestedWorkspaceIsAlreadyOpen) {
